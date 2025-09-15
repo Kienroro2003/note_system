@@ -51,7 +51,7 @@ def get_all_notes():
         conn = get_db_connection()
         with conn.cursor() as cursor:
             sql = "SELECT * FROM `notes` WHERE user_id = %s"  # Lấy note của user_id = 1
-            cursor.execute(sql, (1,))
+            cursor.execute(sql, (2,))
             notes = cursor.fetchall()
         return jsonify(notes), 200
     except Exception as e:
