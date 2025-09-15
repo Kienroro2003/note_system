@@ -8,13 +8,17 @@ api = Blueprint("api", __name__)
 
 @api.route("/notes", methods=["GET", "POST"])
 def handle_notes():
+    user_id = request.args.get("userId", type=int)
+    if user_id is None:
+        return jsonify({"error": "Missing userId parameter"}), 400
+
     if request.method == "GET":
         conn = None
         try:
             conn = get_db_connection()
             with conn.cursor() as cursor:
                 sql = "SELECT * FROM `notes` WHERE user_id = %s"
-                cursor.execute(sql, (1,))  # Ví dụ lấy note của user 1
+                cursor.execute(sql, (user_id,))
                 notes = cursor.fetchall()
             return jsonify(notes), 200
         except Exception as e:
@@ -31,7 +35,6 @@ def handle_notes():
             return jsonify({"error": "Missing content"}), 400
 
         content = data["content"]
-        user_id = 1  # Giả sử đã xác thực người dùng
 
         conn = None
         try:
