@@ -1,6 +1,4 @@
 # File: app/db_manager.py (Đã sửa)
-import logging
-
 import pymysql
 from flask import current_app
 
@@ -37,7 +35,6 @@ def get_db_connection():
         },
     }
 
-    # Ưu tiên thử kết nối với DB đang active
     if active_db_config == "primary":
         preferred_order = ["primary", "standby"]
     else:
@@ -45,28 +42,33 @@ def get_db_connection():
 
     for config_name in preferred_order:
         try:
-            # Lấy cấu hình cho kết nối hiện tại
             config = configs[config_name]
-            logging.info(
+            # Sử dụng logger của app
+            current_app.logger.info(
                 f"Attempting to connect to {config_name} DB at {config['host']}:{config['port']}..."
             )
 
-            # Sử dụng **config để truyền tất cả tham số vào hàm connect
             conn = pymysql.connect(**config)
 
-            # Nếu kết nối thành công, cập nhật lại trạng thái active và trả về
             if active_db_config != config_name:
-                logging.warning(f"SUCCESS: Switched active database to {config_name}")
+                # Sử dụng logger của app
+                current_app.logger.warning(
+                    f"SUCCESS: Switched active database to {config_name}"
+                )
                 active_db_config = config_name
             else:
-                logging.info(f"SUCCESS: Connected to {config_name} DB.")
+                # Sử dụng logger của app
+                current_app.logger.info(f"SUCCESS: Connected to {config_name} DB.")
 
             return conn
 
         except pymysql.err.OperationalError as e:
-            logging.error(f"FAILED to connect to {config_name} DB: {e}")
-            continue  # Thử kết nối tiếp theo
+            # Sử dụng logger của app
+            current_app.logger.error(f"FAILED to connect to {config_name} DB: {e}")
+            continue
 
-    # Nếu cả hai đều thất bại
-    logging.critical("FATAL: Both primary and standby databases are unreachable.")
+    # Sử dụng logger của app
+    current_app.logger.critical(
+        "FATAL: Both primary and standby databases are unreachable."
+    )
     raise Exception("Database service is unavailable.")
