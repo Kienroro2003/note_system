@@ -1,8 +1,26 @@
-# Phiên bản của Docker Compose
-version: "3.8"
+# File: docker-compose.yml (Phiên bản hoàn chỉnh)
 
-# Nơi định nghĩa các dịch vụ (container)
 services:
+  # === DỊCH VỤ CHO ỨNG DỤNG FLASK ===
+  web-app:
+    build: .
+    container_name: note_system_app
+    restart: always
+    ports:
+      - "4000:4000"
+    volumes:
+      # Mount code local vào container để tự động cập nhật khi bạn sửa code
+      - .:/app
+    networks:
+      - db_network
+    depends_on:
+      # Đảm bảo các database khởi động trước ứng dụng
+      - db-primary
+      - db-standby
+    env_file:
+      # Tự động nạp các biến từ file .env
+      - .env
+
   # Dịch vụ cho Database chính (Primary)
   db-primary:
     image: mysql:8.0
@@ -15,10 +33,8 @@ services:
       MYSQL_USER: ${DB_USER}
       MYSQL_PASSWORD: ${DB_PASSWORD}
     ports:
-      # Ánh xạ cổng 3306 của container ra cổng 3306 trên máy thật
       - "3307:3306"
     volumes:
-      # Gắn volume để dữ liệu không bị mất khi container bị xóa
       - primary_db_data:/var/lib/mysql
     networks:
       - db_network
@@ -35,19 +51,15 @@ services:
       MYSQL_USER: ${DB_USER}
       MYSQL_PASSWORD: ${DB_PASSWORD}
     ports:
-      # Ánh xạ cổng 3306 của container ra cổng 3307 trên máy thật (để tránh xung đột)
       - "3308:3306"
     volumes:
-      # Sử dụng một volume riêng cho database dự phòng
       - standby_db_data:/var/lib/mysql
     networks:
       - db_network
 
-# Định nghĩa các volume được sử dụng
 volumes:
   primary_db_data:
   standby_db_data:
 
-# Định nghĩa network để các container có thể giao tiếp với nhau
 networks:
   db_network:
