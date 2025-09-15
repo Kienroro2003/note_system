@@ -1,4 +1,9 @@
-import os
+# run.py
+from app import create_app
 
-SECRET_KEY = os.environ.get("SECRET_KEY") or "a-very-secret-key"
-print(SECRET_KEY)
+app = create_app()
+
+if __name__ == "__main__":
+    # Chạy ứng dụng ở chế độ debug
+    # host='0.0.0.0' để có thể truy cập từ bên ngoài container (nếu bạn chạy app trong Docker)
+    app.run(host="0.0.0.0", port=5000, debug=True)
