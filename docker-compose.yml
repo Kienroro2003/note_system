@@ -1,0 +1,53 @@
+# Phiên bản của Docker Compose
+version: "3.8"
+
+# Nơi định nghĩa các dịch vụ (container)
+services:
+  # Dịch vụ cho Database chính (Primary)
+  db-primary:
+    image: mysql:8.0
+    container_name: mysql_primary
+    hostname: mysql_primary
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    ports:
+      # Ánh xạ cổng 3306 của container ra cổng 3306 trên máy thật
+      - "3307:3306"
+    volumes:
+      # Gắn volume để dữ liệu không bị mất khi container bị xóa
+      - primary_db_data:/var/lib/mysql
+    networks:
+      - db_network
+
+  # Dịch vụ cho Database dự phòng (Standby)
+  db-standby:
+    image: mysql:8.0
+    container_name: mysql_standby
+    hostname: mysql_standby
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    ports:
+      # Ánh xạ cổng 3306 của container ra cổng 3307 trên máy thật (để tránh xung đột)
+      - "3308:3306"
+    volumes:
+      # Sử dụng một volume riêng cho database dự phòng
+      - standby_db_data:/var/lib/mysql
+    networks:
+      - db_network
+
+# Định nghĩa các volume được sử dụng
+volumes:
+  primary_db_data:
+  standby_db_data:
+
+# Định nghĩa network để các container có thể giao tiếp với nhau
+networks:
+  db_network:
